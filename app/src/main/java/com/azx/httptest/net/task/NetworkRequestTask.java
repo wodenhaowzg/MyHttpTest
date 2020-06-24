@@ -17,18 +17,16 @@ public class NetworkRequestTask {
     private NetworkExecuter mNetworkExecuter;
     private RequestBean mRequestBean;
 
-    public Flowable<ResponseBean> execute (RequestBean bean, NetworkExecuter networkExecuter) {
+    public Flowable<ResponseBean> execute(RequestBean bean, NetworkExecuter networkExecuter) {
         mNetworkExecuter = networkExecuter;
         mRequestBean = bean;
         return Flowable.create(new FlowableOnSubscribe<ResponseBean>() {
 
             public void subscribe(FlowableEmitter<ResponseBean> emitter) {
                 Log.d(TAG, "Start request network : " + mRequestBean.toString());
-                boolean request = mNetworkExecuter.executeRequest(mRequestBean);
-                if (request) {
-
-                }
-                emitter.onNext();
+                ResponseBean responseBean = mNetworkExecuter.executeRequest(mRequestBean);
+                emitter.onNext(responseBean);
+                emitter.onComplete();
             }
         }, BackpressureStrategy.BUFFER);
     }

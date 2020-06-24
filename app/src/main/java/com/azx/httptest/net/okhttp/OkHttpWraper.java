@@ -11,7 +11,6 @@ import com.azx.httptest.net.utils.NetworkReuqestUtils;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import okhttp3.Call;
 import okhttp3.Dns;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -82,10 +81,8 @@ public class OkHttpWraper implements NetworkExecuter {
                 boolean successful = response.isSuccessful();
                 Log.d(TAG, "request server result: " + successful);
                 if (successful) {
-                    String responseStr = response.toString();
-                    String message = response.message();
+                    Log.d(TAG, "response server result: " + response.toString());
                     responseBean.mResponseResult = NetworkConstants.NetworkResponseResult.SUCCESS;
-                    response.
                 } else {
                     responseBean.mResponseResult = NetworkConstants.NetworkResponseResult.FAILED;
                 }
