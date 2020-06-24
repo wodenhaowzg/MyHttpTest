@@ -5,16 +5,20 @@ import android.util.Log;
 import com.azx.httptest.net.NetworkConstants;
 import com.azx.httptest.net.NetworkExecuter;
 import com.azx.httptest.net.bean.RequestBean;
+import com.azx.httptest.net.bean.ResponseBean;
 import com.azx.httptest.net.utils.NetworkReuqestUtils;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Call;
 import okhttp3.Dns;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class OkHttpWraper implements NetworkExecuter {
     private static final String TAG = "OkHttpWraper";
@@ -57,7 +61,7 @@ public class OkHttpWraper implements NetworkExecuter {
         if (requestBean.mNetworkRequestType == NetworkConstants.NetworkRequestType.GET) {
             request = new Request.Builder().url(url).get().build();
         } else if (requestBean.mNetworkRequestType == NetworkConstants.NetworkRequestType.POST) {
-            RequestBody body = RequestBody.create("", MediaType.parse());
+            RequestBody body = RequestBody.create(MediaType.parse("text"), "");
             request = new Request.Builder().url(url).post(body).build();
         }
         Log.d(TAG, "build request : " + request);
@@ -65,15 +69,31 @@ public class OkHttpWraper implements NetworkExecuter {
     }
 
     @Override
-    public boolean executeRequest(RequestBean bean) {
+    public ResponseBean executeRequest(RequestBean bean) {
         Request request = buildRequest(bean);
         if (request == null) {
-            return false;
+            return null;
         }
 
         if (mOkHttpClient != null) {
-            mOkHttpClient.newCall(request);
+            ResponseBean responseBean = new ResponseBean();
+            try {
+                Response response = mOkHttpClient.newCall(request).execute();
+                boolean successful = response.isSuccessful();
+                Log.d(TAG, "request server result: " + successful);
+                if (successful) {
+                    String responseStr = response.toString();
+                    String message = response.message();
+                    responseBean.mResponseResult = NetworkConstants.NetworkResponseResult.SUCCESS;
+                    response.
+                } else {
+                    responseBean.mResponseResult = NetworkConstants.NetworkResponseResult.FAILED;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                responseBean.mResponseResult = NetworkConstants.NetworkResponseResult.FAILED;
+            }
         }
-        return false;
+        return null;
     }
 }

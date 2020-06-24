@@ -9,4 +9,8 @@ public class NetworkConstants {
     public enum NetworkRequestType {
         GET, POST
     }
+
+    public enum NetworkResponseResult {
+        SUCCESS, FAILED
+    }
 }
