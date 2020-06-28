@@ -1,8 +1,23 @@
 package com.azx.httptest;
 
+import android.databinding.DataBinderMapper;
+import android.databinding.DataBindingUtil;
+import android.databinding.ViewDataBinding;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+
+import com.azx.httptest.databinding.ActivityMainBinding;
+import com.azx.httptest.net.NetworkConstants;
+import com.azx.httptest.net.bean.RequestBean;
+import com.azx.httptest.net.bean.ResponseBean;
+import com.azx.httptest.net.model.NetworkRequestTaskModel;
+import com.azx.httptest.net.okhttp.OkHttpWraper;
+import com.azx.httptest.net.utils.MyLog;
+
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -22,39 +37,44 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, MainContract.View {
 
+    private static final String TAG = "MainActivity";
     private OkHttpClient client;
+    private MainActivityPresenter presenter;
+    private ActivityMainBinding mActivityMainBinding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        mActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        mActivityMainBinding.mainStart.setOnClickListener(this);
 
-        try {
-            SSLSocketFactory sslSocketFactory = initCertificate();
-            OkHttpClient.Builder builder = new OkHttpClient.Builder();
-            builder.socketFactory(sslSocketFactory);
-            client = builder.build();
-
-            final Request request = new Request.Builder()
-                    .url("https://raw.github.com/square/okhttp/master/README.md")
-                    .build();
-
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Response response = client.newCall(request).execute();
-                        Log.d("ddd", response.body().string());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        presenter = new MainActivityPresenter(this);
+//        try {
+//            SSLSocketFactory sslSocketFactory = initCertificate();
+//            OkHttpClient.Builder builder = new OkHttpClient.Builder();
+//            builder.socketFactory(sslSocketFactory);
+//            client = builder.build();
+//
+//            final Request request = new Request.Builder()
+//                    .url("https://raw.github.com/square/okhttp/master/README.md")
+//                    .build();
+//
+//            new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    try {
+//                        Response response = client.newCall(request).execute();
+//                        Log.d("ddd", response.body().string());
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }).start();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 
     }
 
@@ -109,6 +129,16 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return sb.toString();
+    }
+
+    @Override
+    public void onClick(View v) {
+        presenter.requestAsyncNews();
+    }
+
+    @Override
+    public void showNews(String news) {
+        mActivityMainBinding.mainShowResult.setText(news);
     }
 
 

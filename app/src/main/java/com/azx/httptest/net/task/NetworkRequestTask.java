@@ -2,32 +2,66 @@ package com.azx.httptest.net.task;
 
 import android.util.Log;
 
+import com.azx.httptest.net.NetworkConstants;
 import com.azx.httptest.net.NetworkExecuter;
 import com.azx.httptest.net.bean.RequestBean;
 import com.azx.httptest.net.bean.ResponseBean;
+import com.azx.httptest.net.utils.MyLog;
 
-import io.reactivex.BackpressureStrategy;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
+import java.io.IOException;
+
 import io.reactivex.Flowable;
 import io.reactivex.FlowableEmitter;
 import io.reactivex.FlowableOnSubscribe;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
 
-public class NetworkRequestTask {
+public class NetworkRequestTask implements FlowableOnSubscribe<ResponseBean>, ObservableOnSubscribe<ResponseBean> {
 
     private static final String TAG = "NetworkRequestTask";
     private NetworkExecuter mNetworkExecuter;
     private RequestBean mRequestBean;
 
-    public Flowable<ResponseBean> execute(RequestBean bean, NetworkExecuter networkExecuter) {
-        mNetworkExecuter = networkExecuter;
+    public void executeFlowable(Flowable<ResponseBean> flowable, RequestBean bean, NetworkExecuter networkExecuter) {
         mRequestBean = bean;
-        return Flowable.create(new FlowableOnSubscribe<ResponseBean>() {
+        mNetworkExecuter = networkExecuter;
+        MyLog.d(TAG, "start request network : " + mRequestBean.toString());
+        flowable.subscribe(bean.mSubscriber);
+    }
 
-            public void subscribe(FlowableEmitter<ResponseBean> emitter) {
-                Log.d(TAG, "Start request network : " + mRequestBean.toString());
-                ResponseBean responseBean = mNetworkExecuter.executeRequest(mRequestBean);
-                emitter.onNext(responseBean);
-                emitter.onComplete();
-            }
-        }, BackpressureStrategy.BUFFER);
+    public void executeObservable(Observable<ResponseBean> observable, RequestBean bean, NetworkExecuter networkExecuter) {
+        mRequestBean = bean;
+        mNetworkExecuter = networkExecuter;
+        MyLog.d(TAG, "start request network : " + mRequestBean.toString());
+        observable.subscribe(bean.mObserver);
+    }
+
+    @Override
+    public void subscribe(FlowableEmitter<ResponseBean> emitter) throws Exception {
+        Log.d(TAG, "executing request network : " + mRequestBean.toString());
+        ResponseBean responseBean = runTask();
+        if (responseBean == null || responseBean.mResponseResult != NetworkConstants.NetworkResponseResult.SUCCESS) {
+            emitter.onError(new IOException("error response "));
+        } else {
+            emitter.onNext(responseBean);
+        }
+    }
+
+    @Override
+    public void subscribe(ObservableEmitter<ResponseBean> emitter) throws Exception {
+        ResponseBean responseBean = runTask();
+        if (responseBean == null || responseBean.mResponseResult != NetworkConstants.NetworkResponseResult.SUCCESS) {
+            emitter.onError(new IOException("error response "));
+        } else {
+            emitter.onNext(responseBean);
+        }
+    }
+
+    private ResponseBean runTask() {
+        return mNetworkExecuter.executeRequest(mRequestBean);
     }
 }

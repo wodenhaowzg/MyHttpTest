@@ -4,5 +4,5 @@ import com.azx.httptest.net.bean.RequestBean;
 
 public interface NetworkRequest {
 
-    void requestAsync(RequestBean bean);
+    boolean requestAsync(RequestBean bean);
 }

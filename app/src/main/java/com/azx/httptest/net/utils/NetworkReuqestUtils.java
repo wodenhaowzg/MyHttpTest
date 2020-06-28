@@ -8,8 +8,8 @@ public class NetworkReuqestUtils {
 
     public static boolean checkRequestIllegal(RequestBean bean) {
         if (TextUtils.isEmpty(bean.mUrl)) {
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 }

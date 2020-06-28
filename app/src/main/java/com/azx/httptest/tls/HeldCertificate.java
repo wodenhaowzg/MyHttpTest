@@ -46,7 +46,6 @@ import javax.security.auth.x500.X500Principal;
 
 import okio.ByteString;
 
-import static okhttp3.internal.Util.verifyAsIpAddress;
 
 /**
  * A certificate and its private key. These are some properties of certificates that are used with
@@ -397,16 +396,16 @@ public final class HeldCertificate {
             }
 
             if (!altNames.isEmpty()) {
-                ASN1Encodable[] encodableAltNames = new ASN1Encodable[altNames.size()];
-                for (int i = 0, size = altNames.size(); i < size; i++) {
-                    String altName = altNames.get(i);
-                    int tag = verifyAsIpAddress(altName)
-                            ? GeneralName.iPAddress
-                            : GeneralName.dNSName;
-                    encodableAltNames[i] = new GeneralName(tag, altName);
-                }
-                generator.addExtension(X509Extensions.SubjectAlternativeName, true,
-                        new DERSequence(encodableAltNames));
+//                ASN1Encodable[] encodableAltNames = new ASN1Encodable[altNames.size()];
+//                for (int i = 0, size = altNames.size(); i < size; i++) {
+//                    String altName = altNames.get(i);
+//                    int tag = verifyAsIpAddress(altName)
+//                            ? GeneralName.iPAddress
+//                            : GeneralName.dNSName;
+//                    encodableAltNames[i] = new GeneralName(tag, altName);
+//                }
+//                generator.addExtension(X509Extensions.SubjectAlternativeName, true,
+//                        new DERSequence(encodableAltNames));
             }
 
             try {

@@ -102,14 +102,15 @@ public final class HandshakeCertificates {
     }
 
     public SSLContext sslContext() {
-        try {
-            SSLContext sslContext = Platform.get().getSSLContext();
-            sslContext.init(new KeyManager[]{keyManager}, new TrustManager[]{trustManager},
-                    new SecureRandom());
-            return sslContext;
-        } catch (KeyManagementException e) {
-            throw new AssertionError(e);
-        }
+//        try {
+//            SSLContext sslContext = Platform.get().getSSLContext();
+//            sslContext.init(new KeyManager[]{keyManager}, new TrustManager[]{trustManager},
+//                    new SecureRandom());
+//            return sslContext;
+//        } catch (KeyManagementException e) {
+//            throw new AssertionError(e);
+//        }
+        return null;
     }
 
     public static final class Builder {
@@ -156,8 +157,8 @@ public final class HandshakeCertificates {
          * this problem with {@linkplain CertificatePinner certificate pinning}.
          */
         public Builder addPlatformTrustedCertificates() {
-            X509TrustManager platformTrustManager = Util.platformTrustManager();
-            Collections.addAll(trustedCertificates, platformTrustManager.getAcceptedIssuers());
+//            X509TrustManager platformTrustManager = Util.platformTrustManager();
+//            Collections.addAll(trustedCertificates, platformTrustManager.getAcceptedIssuers());
             return this;
         }
 

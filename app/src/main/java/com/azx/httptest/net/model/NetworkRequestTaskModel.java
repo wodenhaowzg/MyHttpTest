@@ -1,69 +1,55 @@
 package com.azx.httptest.net.model;
 
 import com.azx.httptest.net.NetworkExecuter;
+import com.azx.httptest.net.NetworkRequest;
 import com.azx.httptest.net.bean.RequestBean;
 import com.azx.httptest.net.bean.ResponseBean;
 import com.azx.httptest.net.task.NetworkRequestTask;
+import com.azx.httptest.net.utils.MyLog;
 
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
+import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
-import io.reactivex.Scheduler;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
-public class NetworkRequestTaskModel implements Subscriber<ResponseBean> {
+public class NetworkRequestTaskModel implements NetworkRequest {
 
-    private NetworkRequestTask mNetworkRequestTask;
+    private static final String TAG = "NetworkRequestTaskModel";
     private NetworkExecuter mNetworkExecuter;
-    private List<RequestBean> mRequestBeans;
-
-    public NetworkRequestTaskModel(RequestBean bean) {
-        this.mRequestBeans = new ArrayList<>();
-        mRequestBeans.add(bean);
-    }
-
-    public NetworkRequestTaskModel(List<RequestBean> beans) {
-        this.mRequestBeans = beans;
-    }
+    private boolean enableBackpressure;
 
     public void setNetworkExecuter(NetworkExecuter executer) {
         mNetworkExecuter = executer;
     }
 
-    public boolean executeFirstTask() {
-        RequestBean bean = mRequestBeans.get(0);
-        if (mNetworkRequestTask == null) {
-            mNetworkRequestTask = new NetworkRequestTask();
-            Flowable<ResponseBean> flowable = mNetworkRequestTask.execute(bean, mNetworkExecuter);
-            flowable.subscribeOn(Schedulers.single()).subscribe(this);
-            return true;
+    @Override
+    public boolean requestAsync(RequestBean bean) {
+        NetworkExecuter networkExecuter = mNetworkExecuter;
+        if (networkExecuter == null) {
+            MyLog.e(TAG, "request async failed! NetworkExecuter is null");
+            return false;
         }
-        return false;
-    }
 
-    @Override
-    public void onSubscribe(Subscription s) {
-
-    }
-
-    @Override
-    public void onNext(ResponseBean responseBean) {
-
-    }
-
-    @Override
-    public void onError(Throwable t) {
-
-    }
-
-    @Override
-    public void onComplete() {
-
+        NetworkRequestTask networkRequestTask = new NetworkRequestTask();
+        if (enableBackpressure) {
+            Flowable<ResponseBean> requestBeanFlowable = Flowable.create(networkRequestTask, BackpressureStrategy.BUFFER)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread());
+            networkRequestTask.executeFlowable(requestBeanFlowable, bean, networkExecuter);
+        } else {
+            Observable<ResponseBean> responseBeanObservable = Observable.create(networkRequestTask)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread());
+            networkRequestTask.executeObservable(responseBeanObservable, bean, networkExecuter);
+        }
+        return true;
     }
 }
